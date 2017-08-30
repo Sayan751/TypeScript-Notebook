@@ -1,0 +1,21 @@
+{
+  "name": "typescript-notebook",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sayan Pal",
+  "license": "MIT",
+  "devDependencies": {
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-create-tsindex": "^1.0.4",
+    "gulp-typescript": "^3.2.2",
+    "merge2": "^1.1.0",
+    "require-dir": "^0.3.2",
+    "run-sequence": "^2.1.0",
+    "typescript": "^2.4.2"
+  }
+}
