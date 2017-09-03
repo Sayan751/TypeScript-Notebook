@@ -1,5 +1,5 @@
 export class Point {
-    static abc:string;
+    public static abc: string = "Point abc";
     x: number;
     y: number;
     constructor(x: number, y: number) {
@@ -7,8 +7,10 @@ export class Point {
         this.y = y;
     }
     add(point: Point) {
-        Point.abc;
         return new Point(this.x + point.x, this.y + point.y);
+    }
+    static printStatic() {
+        console.log(`in point printStatic: ${this.abc}`);
     }
 }
 
@@ -23,3 +25,5 @@ export class Point3D extends Point {
         return new Point3D(point2D.x, point2D.y, this.z + point.z);
     }
 }
+
+Point3D.printStatic();

@@ -1,11 +1,13 @@
-# Notes on `prototype` and `__proto__` #
+# JavaScript's 42: `prototype` and `__proto__` #
 
-- [Notes on `prototype` and `__proto__`](#notes-on-`prototype`-and-`proto`)
-    - [`__proto__`](#`proto`)
-    - [`prototype`](#`prototype`)
-    - [`__proto__` and inheritance](#`proto`-and-inheritance)
-    - [`Object.create` and inheritance](#`objectcreate`-and-inheritance)
-    - [`extends` in TypeScript and inheritance](#`extends`-in-typescript-and-inheritance)
+  - [`__proto__`](#__proto__)
+  - [`prototype`](#prototype)
+  - [`__proto__` and inheritance](#__proto__-and-inheritance)
+    - [Basics](#basics)
+    - [Accessing instance-scoped properties of base class](#accessing-instancescoped-properties-of-base-class)
+    - [Accessing static members of base class](#accessing-static-members-of-base-class)
+  - [`Object.create` and inheritance](#objectcreate-and-inheritance)
+  - [`extends` in TypeScript and inheritance](#extends-in-typescript-and-inheritance)
 
 ## `__proto__` ##
 
@@ -48,6 +50,8 @@ console.log(MyFun.prototype.constructor === MyFun); // true
 ```
 
 ## `__proto__` and inheritance ##
+
+### **Basics** ###
 
 Because JavaScript tries to fetch member from `__proto__` recursively, `__proto__` is useful to implement prototypical inheritance.
 A simple way to implement inheritance would be to assign `<Base>.prototype` to `__proto__.__proto__` to an object which wants capabilities of `<Base>`. Example:
@@ -96,6 +100,8 @@ console.log("Is bird a Bird? " + (bird instanceof Bird) + ", Is bird an Animal? 
 
 **Note:** From [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof):
 >The `instanceof` operator tests whether an object in its prototype chain has the prototype property of a constructor.
+
+### **Accessing instance-scoped properties of base class** ###
 
 So far our inheritance implementation works quite good. So, lets consider other scenarios. With inheritance, we can access the instance-scoped properties of the class. Let's see if we can do that using our implementation of inheritance. So, let's add new properties to the classes.
 
@@ -170,7 +176,112 @@ We see that based on different values of `thisArg` parameter we can produce diff
 
 And this is what is done to inherit the instance-scoped properties from the Base class. So we call `Base.call(this)` from the constructor of `Derived`, where `this` points to the instance of `Derived` being constructed, and thereby *putting* the properties of `Base` to the instance of `Derived`.
 
-On ground level that's all we need to implement inheritance in JavaScript.
+### **Accessing static members of base class** ###
+
+So we are almost done. One last thing is to inherit the `static` members. Yes, using JavaScript that is possible. So the first question is to how to have `static` members in classes in JavaScript.
+
+Well `static` members roughly refers to the members those are tied with class and not to the instances of the class, and thus when the `static` members are updated, the updated value is available to all the instances of the class. So we access the `static` members are accessed like `ClassName.staticMember`, or `ClassName.staticMethod()`, and that is what we need to implement the `static` members in class. Example:
+
+```javascript
+function StaticDemo(prop1) {
+    this.instanceProp = prop1;
+    StaticDemo.staticProp++;
+}
+StaticDemo.staticProp = 0;          // a static property
+StaticDemo.prototype.print = function () {
+    console.log(`Instance prop: ${this.instanceProp}, static prop: ${StaticDemo.staticProp}`);
+}
+
+var instance1 = new StaticDemo(10);
+instance1.print();                  // Instance prop: 10, static prop: 1
+var instance2 = new StaticDemo(20);
+instance1.print();                  // Instance prop: 10, static prop: 2
+instance2.print();                  // Instance prop: 20, static prop: 2
+```
+
+So to create a `static` property on class, we can simply define a property on the `Class`, like it is done for `StaticDemo.staticProp`. Recalling that `var instance = new Class()` assigns the `Class.prototype` to `instance.__proto__`, a class member defined not on `prototype` and directly on `Class` instead, the member does not get *tied* with instances created and rather stays *attached* with the `Class`. And that's how the static properties are created in JavaScript.
+
+So how to inherit the `static` members? Well, that is just a simple matter of copying the member (value-copy for simple-typed member, and reference-copy for object-typed member) from one place to another. So to do that we need another piece of function, as shown below.
+
+```javascript
+var inheritStatics = function (derived, base) {
+    for (var p in base)
+        if (base.hasOwnProperty(p)) derived[p] = base[p];
+};
+```
+
+From [`for...in` documentation in MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in):
+>A `for...in` loop only iterates over enumerable properties.
+
+and from [`hasOwnProperty()` documentation in MDN](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty):
+
+>The `hasOwnProperty()` method returns a boolean indicating whether the object has the specified property as own (not inherited) property.
+
+So the function `inheritStatics` copies the properties defined on `base` to `derived`. In general, `base`, and `derived` can be any two general objects. Example:
+
+```javascript
+var obj1 = {
+    prop1: 1,
+    innerObj: {
+        inner1: 10
+    }
+};
+
+var obj2 = {
+    propa: "A"
+};
+
+inheritStatics(obj2, obj1);
+console.log(obj2);                            // { propa: 'A', prop1: 1, innerObj: { inner1: 10 } }
+console.log(obj1.innerObj === obj2.innerObj); // true // reference of the object is copied.
+```
+
+Lastly, we see it in action for inheriting `static`s from base class to derived class.
+
+```javascript
+function Animal() {
+    this.claws = "An animal has claws";
+    Animal.population++;
+}
+// a static property
+Animal.population = 0;
+// a static method
+Animal.printPopulation = function () {
+    console.log(`Bird population: ${Bird.population}, Fish population: ${Fish.population}, Animal population: ${Animal.population}`);
+}
+
+function Bird() {
+    Animal.call(this);
+    this.wings = "A bird has wings";
+    Bird.population++;
+}
+inheritStatics(Bird, Animal);
+Bird.prototype.__proto__ = Animal.prototype;
+
+function Fish() {
+    Animal.call(this);
+    this.fins = "A fish has fins";
+    Fish.population++;
+}
+inheritStatics(Fish, Animal);
+Fish.prototype.__proto__ = Animal.prototype;
+// override the static method
+Fish.printPopulation = function(){
+    console.log(`From Fish.printPopulation: Bird population: ${Bird.population}, Fish population: ${Fish.population}, Animal population: ${Animal.population}`);
+}
+
+new Bird();
+Animal.printPopulation();   // Bird population: 1, Fish population: 0, Animal population: 1
+new Bird();
+Bird.printPopulation();     // Bird population: 2, Fish population: 0, Animal population: 2
+new Fish();
+Fish.printPopulation();     // From Fish.printPopulation: Bird population: 2, Fish population: 1, Animal population: 3
+new Fish();
+Animal.printPopulation();   // Bird population: 2, Fish population: 2, Animal population: 4
+console.log(Animal.printPopulation === Bird.printPopulation, Animal.printPopulation === Fish.printPopulation);      // true false
+```
+
+So, yes, on ground level that's all we need to implement inheritance in JavaScript. This is quite something right?
 
 ## `Object.create` and inheritance ##
 

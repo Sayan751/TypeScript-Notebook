@@ -144,8 +144,92 @@ function aggregate(prefix) {
     console.log(`${prefix} ${this.prop1+this.prop2}`);
 }
 
-var thisObj1 = { prop1: 10, prop2: 20 };
-var thisObj2 = { prop1: "Hello", prop2: "World" };
+var thisObj1 = {
+    prop1: 10,
+    prop2: 20
+};
+var thisObj2 = {
+    prop1: "Hello",
+    prop2: "World"
+};
 
 aggregate.call(thisObj1, "thisObj1 aggregated:");
 aggregate.call(thisObj2, "thisObj2 aggregated:");
+
+console.log("--------------------");
+
+function StaticDemo(prop1) {
+    this.instanceProp = prop1;
+    StaticDemo.staticProp++;
+}
+StaticDemo.staticProp = 0; // a static property
+StaticDemo.prototype.print = function () {
+    console.log(`Instance prop: ${this.instanceProp}, static prop: ${StaticDemo.staticProp}`);
+}
+
+var instance1 = new StaticDemo(10);
+instance1.print(); // Instance prop: 10, static prop: 1
+var instance2 = new StaticDemo(20);
+instance1.print(); // Instance prop: 10, static prop: 2
+instance2.print(); // Instance prop: 20, static prop: 2
+
+console.log("--------------------");
+var inheritStatics = function (derived, base) {
+    for (var p in base)
+        if (base.hasOwnProperty(p)) derived[p] = base[p];
+};
+
+function Animal() {
+    this.claws = "An animal has claws";
+    Animal.population++;
+}
+Animal.population = 0;
+Animal.printPopulation = function () {
+    console.log(`Bird population: ${Bird.population}, Fish population: ${Fish.population}, Animal population: ${Animal.population}`);
+}
+
+function Bird() {
+    Animal.call(this); // Calling the constructor of Animal, passing this as current object.
+    this.wings = "A bird has wings";
+    Bird.population++;
+}
+inheritStatics(Bird, Animal);
+Bird.prototype.__proto__ = Animal.prototype;
+
+function Fish() {
+    Animal.call(this); // Calling the constructor of Animal, passing this as current object.
+    this.fins = "A bird has fins";
+    Fish.population++;
+}
+inheritStatics(Fish, Animal);
+Fish.prototype.__proto__ = Animal.prototype;
+Fish.printPopulation = function(){
+    console.log(`From Fish.printPopulation: Bird population: ${Bird.population}, Fish population: ${Fish.population}, Animal population: ${Animal.population}`);
+}
+
+new Bird();
+Animal.printPopulation();
+new Bird();
+Bird.printPopulation();
+new Fish();
+Fish.printPopulation();
+new Fish();
+Animal.printPopulation();
+console.log(Animal.printPopulation === Bird.printPopulation, Animal.printPopulation === Fish.printPopulation);
+
+console.log("--------------------");
+
+var obj1 = {
+    prop1: 1,
+    innerObj: {
+        inner1: 10
+    }
+};
+
+var obj2 = {
+    propa: "A"
+};
+
+inheritStatics(obj2, obj1);
+console.log(obj2);
+console.log(obj1.innerObj === obj2.innerObj);
