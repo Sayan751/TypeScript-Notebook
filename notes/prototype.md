@@ -4,7 +4,7 @@
   - [`prototype`](#prototype)
   - [`__proto__` and inheritance](#__proto__-and-inheritance)
     - [Basics](#basics)
-    - [Accessing instance-scoped properties of base class](#accessing-instancescoped-properties-of-base-class)
+    - [Accessing instance-scoped properties of base class](#accessing-instance-scoped-properties-of-base-class)
     - [Accessing static members of base class](#accessing-static-members-of-base-class)
   - [`Object.create` and inheritance](#objectcreate-and-inheritance)
   - [`extends` in TypeScript and inheritance](#extends-in-typescript-and-inheritance)
