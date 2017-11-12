@@ -203,7 +203,7 @@ function Fish() {
 }
 inheritStatics(Fish, Animal);
 Fish.prototype.__proto__ = Animal.prototype;
-Fish.printPopulation = function(){
+Fish.printPopulation = function () {
     console.log(`From Fish.printPopulation: Bird population: ${Bird.population}, Fish population: ${Fish.population}, Animal population: ${Animal.population}`);
 }
 
@@ -233,3 +233,36 @@ var obj2 = {
 inheritStatics(obj2, obj1);
 console.log(obj2);
 console.log(obj1.innerObj === obj2.innerObj);
+
+console.log("-------------");
+
+function Animal1() {
+    this.claws = "An animal has claws";
+    Animal1.population++;
+}
+Animal1.population = 0;
+Animal1.printPopulation = function () {
+    console.log(`Bird population: ${Bird1.population}, Fish population: ${Fish1.population}, Animal population: ${Animal1.population}`);
+}
+
+function Bird1() {
+    Animal1.call(this); // Calling the constructor of Animal, passing this as current object.
+    this.wings = "A bird has wings";
+    Bird1.population++;
+}
+Object.setPrototypeOf(Bird1, Animal1);
+Bird1.prototype.__proto__ = Animal1.prototype;
+
+function Fish1() {
+    Animal1.call(this); // Calling the constructor of Animal, passing this as current object.
+    this.fins = "A bird has fins";
+    Fish1.population++;
+}
+Object.setPrototypeOf(Fish1, Animal1);
+Fish1.prototype.__proto__ = Animal1.prototype;
+
+var birdy = new Bird1();
+console.log(birdy.claws);
+console.log(birdy.wings);
+console.log(Bird1.population);
+Bird1.printPopulation();

@@ -1,6 +1,8 @@
 {
     "compilerOptions": {
-        "target": "es5"
+        "target": "es5",
+        "downlevelIteration": true,
+        "removeComments": true
     },
     "exclude": ["node_modules", "dist"],
     "include": ["src/**/*"]
